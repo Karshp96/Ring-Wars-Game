@@ -1,0 +1,113 @@
+# Ring Wars - System Requirements
+
+## Java Backend Requirements
+
+### Java Version
+- Java 21 or higher (LTS recommended)
+
+### Maven Version  
+- Maven 3.6.0 or higher
+
+### Spring Boot Dependencies (Managed by Maven)
+- Spring Boot 3.2.0
+- Spring Boot Starter Web
+- Spring Boot Starter WebFlux
+- Spring Boot Configuration Processor
+- Lombok (annotation processor)
+
+### Development Dependencies
+- Spring Boot Starter Test
+- Spring REST Docs MockMVC
+
+## Frontend Requirements
+
+### Web Browser Support
+- Google Chrome 90+
+- Mozilla Firefox 88+
+- Safari 14+
+- Microsoft Edge 90+
+
+### Browser Features Required
+- ES6+ JavaScript support
+- CSS Grid and Flexbox
+
+## Development Environment
+
+### Recommended Development Tools
+- **IDE**: IntelliJ IDEA, Eclipse, or VS Code with Java extensions
+- **Browser DevTools**: For frontend debugging
+- **Postman or similar**: For API testing
+- **Git**: Version control
+
+### Network Requirements
+- Port 8080 available for Spring Boot application
+- Port 3000 available for optional frontend development server
+
+## Production Deployment Requirements
+
+## Optional Tools
+
+### Monitoring (Production)
+- Spring Boot Actuator endpoints enabled
+- Micrometer for metrics collection
+- Log aggregation tools (ELK stack, Splunk, etc.)
+
+## Installation Verification
+
+### Java Installation Check
+```bash
+java -version
+# Should show Java 21.x.x
+
+mvn -version  
+# Should show Maven 3.6.0+
+```
+
+## Security Considerations
+
+### Development
+- CORS configured for all origins (development only)
+- No authentication implemented (to be added)
+- Input validation on backend API
+
+### Production Recommendations (Enhancements for future)
+- Configure CORS for specific domains only
+- Add authentication and authorization
+- Use HTTPS for all communications
+- Implement rate limiting
+- Add input sanitization and validation
+- Use environment variables for configuration
+
+## Performance Notes
+
+### Backend
+- In-memory game storage
+- No database queries for current implementation
+- Stateless REST API design
+
+### Frontend  
+- Vanilla JavaScript (no framework overhead)
+- CSS animations
+- DOM manipulation
+- Responsive images and layouts
+
+## Troubleshooting Common Issues
+
+### Port Conflicts
+- Change server port in `application.properties`: `server.port=8081`
+- Update frontend API base URL accordingly in html file
+
+### CORS Issues
+- Verify WebConfig.java CORS configuration
+- Check browser console for CORS errors
+- Use same origin for development if issues persist
+
+### Java Version Issues
+- Ensure JAVA_HOME points to Java 21+
+- Update PATH to include correct Java bin directory
+- Verify Maven is using correct Java version
+
+### Build Issues
+- Clear Maven cache: `mvn clean`
+- Refresh dependencies: `mvn clean install -U`
+- Check internet connection for dependency downloads

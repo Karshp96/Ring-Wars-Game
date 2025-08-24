@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ring Wars</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 10px rgba(255,255,255,0.3); }
+            to { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.6); }
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .game-setup {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .input-group input {
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+            width: 100%;
+            max-width: 300px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-area {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+
+        .player-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .player-info.current {
+            border-color: #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.4);
+            transform: scale(1.02);
+        }
+
+        .player-rings {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .ring-counter {
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .ring-counter:hover {
+            transform: translateY(-2px);
+        }
+
+        .ring-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+            border: 3px solid;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .ring-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .ring-preview.small { width: 20px; height: 20px; }
+        .ring-preview.medium { width: 30px; height: 30px; }
+        .ring-preview.large { width: 40px; height: 40px; }
+
+        .ring-preview.selected {
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            transform: scale(1.3);
+            animation: ringPulse 1s infinite alternate;
+        }
+
+        @keyframes ringPulse {
+            from { box-shadow: 0 0 15px rgba(0,0,0,0.8); }
+            to { box-shadow: 0 0 25px rgba(0,0,0,1); }
+        }
+
+        .ring-preview.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .game-status {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .status-text {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .turn-timer {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 450px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .cell {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cell.can-place {
+            background: linear-gradient(135deg, #a8e6a3 0%, #7fb069 100%) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4), inset 0 2px 4px rgba(0,0,0,0.1);
+            animation: canPlacePulse 2s infinite;
+        }
+
+        @keyframes canPlacePulse {
+            0%, 100% { transform: translateY(-3px) scale(1); }
+            50% { transform: translateY(-3px) scale(1.02); }
+        }
+
+        .cell:hover:not(.can-place) {
+            background: linear-gradient(135deg, #d5dbdb 0%, #95a5a6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .cell.winning {
+            background: linear-gradient(45deg, #f39c12, #e67e22) !important;
+            animation: winningPulse 1s infinite alternate;
+            box-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
+        }
+
+        @keyframes winningPulse {
+            from { 
+                transform: scale(1);
+                box-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
+            }
+            to { 
+                transform: scale(1.05);
+                box-shadow: 0 0 40px rgba(243, 156, 18, 1);
+            }
+        }
+
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 4px solid;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .ring.small { 
+            width: 30px; 
+            height: 30px;
+            border-width: 3px;
+        }
+        .ring.medium { 
+            width: 50px; 
+            height: 50px;
+            border-width: 4px;
+        }
+        .ring.large { 
+            width: 70px; 
+            height: 70px;
+            border-width: 5px;
+        }
+
+        .ring.RED { 
+            border-color: #e74c3c;
+            background: radial-gradient(circle, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.1));
+        }
+        .ring.BLUE { 
+            border-color: #3498db;
+            background: radial-gradient(circle, rgba(52, 152, 219, 0.3), rgba(52, 152, 219, 0.1));
+        }
+        .ring.GREEN { 
+            border-color: #27ae60;
+            background: radial-gradient(circle, rgba(39, 174, 96, 0.3), rgba(39, 174, 96, 0.1));
+        }
+        .ring.YELLOW { 
+            border-color: #f1c40f;
+            background: radial-gradient(circle, rgba(241, 196, 15, 0.3), rgba(241, 196, 15, 0.1));
+        }
+
+        .ring.newly-placed {
+            animation: ringDrop 0.6s ease-out;
+        }
+
+        @keyframes ringDrop {
+            0% {
+                transform: translateY(-100px) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(5px) scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .win-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            animation: winMessageAppear 0.5s ease-out;
+            border: 3px solid #27ae60;
+        }
+
+        @keyframes winMessageAppear {
+            from { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.5); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1); 
+            }
+        }
+
+        .win-message h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #27ae60;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
+            z-index: 999;
+            display: none;
+            animation: overlayFade 0.3s ease-out;
+        }
+
+        @keyframes overlayFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .rules {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .rules h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .rules ul {
+            list-style-position: inside;
+            line-height: 1.6;
+        }
+
+        .rules li {
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .rules li:hover {
+            transform: translateX(5px);
+            color: #667eea;
+        }
+
+        .move-history {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+
+        .move-history h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .move-item {
+            padding: 5px;
+            margin: 2px 0;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .move-item:hover {
+            background: #e9ecef;
+        }
+
+        .sound-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .sound-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .game-info {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .board {
+                max-width: 320px;
+            }
+            
+            .cell {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .ring.small { width: 25px; height: 25px; }
+            .ring.medium { width: 40px; height: 40px; }
+            .ring.large { width: 55px; height: 55px; }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particle-float 2s ease-out forwards;
+        }
+
+        @keyframes particle-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sound-controls">
+        <button class="sound-btn" onclick="toggleSound()" title="Toggle Sound">🔊</button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Ring Wars</h1>
+            <p>Get 3 in a Row to Win!</p>
+        </div>
+
+        <div id="gameSetup" class="game-setup">
+            <div class="input-group">
+                <label for="player1Name">Player 1 Name (Red):</label>
+                <input type="text" id="player1Name" placeholder="Enter your name" maxlength="20">
+            </div>
+            
+            <div class="input-group">
+                <label for="player2Name">Player 2 Name (Blue):</label>
+                <input type="text" id="player2Name" placeholder="Enter your name" maxlength="20">
+            </div>
+            
+            <button class="btn" onclick="startGame()">⚡ Start Epic Battle</button>
+
+            <div class="rules">
+                <h3>🏆 Victory Conditions:</h3>
+                <ul>
+                    <li><strong>Same Size Line:</strong> 3 rings of identical size in a row, column, or diagonal</li>
+                    <li><strong>Size Progression:</strong> Small→Medium→Large (or reverse) in any line</li>
+                    <li><strong>Concentric Stack:</strong> All 3 different sizes stacked in the same cell</li>
+                </ul>
+                
+                <h3>⚔️ Battle Rules:</h3>
+                <ul>
+                    <li>2 warriors take turns placing rings on the 3×3 battlefield</li>
+                    <li>Each player commands 3 small, 3 medium, and 3 large rings</li>
+                    <li>Rings can be placed on top of different sized rings</li>
+                    <li>Same size rings cannot occupy the same position</li>
+                    <li>Once placed, rings are locked in battle position</li>
+                    <li>If no valid moves remain, skip your turn</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="gameArea" class="game-area">
+            <div class="game-info">
+                <div id="playerList" class="player-info">
+                    <h3>⚔️ Warriors</h3>
+                    <div id="players"></div>
+                    <div class="move-history">
+                        <h4>📜 Battle Log</h4>
+                        <div id="moveHistory"></div>
+                    </div>
+                </div>
+
+                <div class="game-status">
+                    <div id="gameStatus" class="status-text">Preparing for battle...</div>
+                    <div id="turnTimer" class="turn-timer"></div>
+                    <button class="btn" onclick="newGame()" style="margin-top: 15px;">🔄 New Battle</button>
+                </div>
+
+                <div id="currentPlayer" class="player-info">
+                    <h3>⏰ Current Warrior</h3>
+                    <div id="playerRings"></div>
+                </div>
+            </div>
+
+            <div id="gameBoard" class="board">
+                <!-- Cells will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="win-message" id="winMessage">
+        <h2>🎉 Victory!</h2>
+        <p id="winText"></p>
+        <button class="btn" onclick="newGame()">⚔️ Battle Again</button>
+    </div>
+
+    <script>
+        // Game state - simulated since we don't have the backend
+        let gameState = {
+            gameId: 'demo-game',
+            status: 'WAITING',
+            currentPlayerIndex: 0,
+            players: [],
+            board: Array(3).fill().map(() => Array(3).fill().map(() => ({rings: []}))),
+            winner: null,
+            winningLine: null
+        };
+        
+        let selectedRingSize = null;
+        let moveHistory = [];
+        let soundEnabled = true;
+        let turnStartTime = Date.now();
+
+        const COLORS = {
+            'RED': '#e74c3c',
+            'BLUE': '#3498db', 
+            'GREEN': '#27ae60',
+            'YELLOW': '#f1c40f'
+        };
+
+        const PLAYER_COLORS = ['RED', 'BLUE'];
+
+        // Sound effects simulation
+        function playSound(type) {
+            if (!soundEnabled) return;
+            
+            // In a real implementation, you'd play actual audio files
+            console.log(`Playing sound: ${type}`);
+            
+            // Visual feedback for sound
+            if (type === 'move') {
+                createParticles();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.querySelector('.sound-btn');
+            btn.textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function createParticles() {
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * window.innerWidth + 'px';
+                    particle.style.top = Math.random() * window.innerHeight + 'px';
+                    particle.style.width = Math.random() * 6 + 4 + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.backgroundColor = Object.values(COLORS)[Math.floor(Math.random() * Object.keys(COLORS).length)];
+                    document.body.appendChild(particle);
+                    
+                    setTimeout(() => particle.remove(), 2000);
+                }, i * 100);
+            }
+        }
+
+        function startGame() {
+            const player1Name = document.getElementById('player1Name').value.trim();
+            const player2Name = document.getElementById('player2Name').value.trim();
+            
+            if (!player1Name || !player2Name) {
+                alert('Please enter both warrior names!');
+                return;
+            }
+            
+            if (player1Name === player2Name) {
+                alert('Warriors must have different names!');
+                return;
+            }
+
+            // Initialize game state
+            gameState.players = [
+                {
+                    name: player1Name,
+                    color: PLAYER_COLORS[0],
+                    rings: { SMALL: 3, MEDIUM: 3, LARGE: 3 }
+                },
+                {
+                    name: player2Name,
+                    color: PLAYER_COLORS[1],
+                    rings: { SMALL: 3, MEDIUM: 3, LARGE: 3 }
+                }
+            ];
+            gameState.status = 'PLAYING';
+            gameState.currentPlayerIndex = 0;
+            moveHistory = [];
+            turnStartTime = Date.now();
+
+            showGameArea();
+            updateDisplay();
+            startTurnTimer();
+        }
+
+        function showGameArea() {
+            document.getElementById('gameSetup').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'block';
+            createBoard();
+        }
+
+        function createBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.onclick = () => makeMove(i, j);
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function updateDisplay() {
+            if (!gameState) return;
+
+            updateGameStatus();
+            updatePlayersList();
+            updateCurrentPlayerInfo();
+            updateBoard();
+            updateMoveHistory();
+        }
+
+        function updateGameStatus() {
+            const statusEl = document.getElementById('gameStatus');
+            
+            if (gameState.status === 'WAITING') {
+                statusEl.textContent = 'Gathering warriors...';
+            } else if (gameState.status === 'PLAYING') {
+                const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+                statusEl.textContent = `${currentPlayer.name}'s Turn`;
+            } else if (gameState.status === 'FINISHED') {
+                statusEl.textContent = `Battle Complete!`;
+                showWinMessage();
+            }
+        }
+
+        function updatePlayersList() {
+            const playersEl = document.getElementById('players');
+            playersEl.innerHTML = '';
+            
+            gameState.players.forEach((player, index) => {
+                const playerDiv = document.createElement('div');
+                playerDiv.innerHTML = `
+                    <strong style="color: ${COLORS[player.color]}">${player.name}</strong>
+                    <br><span style="font-size: 0.9em;">⚡ ${player.color} Rings</span>
+                    <br><small>Total: ${Object.values(player.rings).reduce((a,b) => a+b, 0)}</small>
+                `;
+                if (index === gameState.currentPlayerIndex) {
+                    playerDiv.style.background = 'rgba(40, 167, 69, 0.1)';
+                    playerDiv.style.borderRadius = '8px';
+                    playerDiv.style.padding = '8px';
+                }
+                playersEl.appendChild(playerDiv);
+            });
+        }
+
+        function updateCurrentPlayerInfo() {
+            const currentPlayerEl = document.getElementById('currentPlayer');
+            const playerRingsEl = document.getElementById('playerRings');
+            
+            if (gameState.status !== 'PLAYING') {
+                currentPlayerEl.classList.remove('current');
+                playerRingsEl.innerHTML = '';
+                return;
+            }
+
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            currentPlayerEl.classList.add('current');
+            
+            playerRingsEl.innerHTML = `
+                <h4 style="color: ${COLORS[currentPlayer.color]}">⚔️ ${currentPlayer.name}</h4>
+                <div class="player-rings">
+                    ${['SMALL', 'MEDIUM', 'LARGE'].map(size => `
+                        <div class="ring-counter">
+                            <div class="ring-preview ${size.toLowerCase()} ${selectedRingSize === size ? 'selected' : ''} ${currentPlayer.rings[size] === 0 ? 'disabled' : ''}"
+                                 style="border-color: ${COLORS[currentPlayer.color]}; background: ${COLORS[currentPlayer.color]}40"
+                                 onclick="selectRingSize('${size}')">
+                            </div>
+                            <div style="font-weight: bold;">${currentPlayer.rings[size]}</div>
+                            <div style="font-size: 0.8em;">${size}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    ${selectedRingSize ? `Selected: ${selectedRingSize}` : 'Select a ring size'}
+                </div>
+            `;
+        }
+
+        function updateBoard() {
+            const cells = document.querySelectorAll('.cell');
+            
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / 3);
+                const col = index % 3;
+                const cellData = gameState.board[row][col];
+                
+                // Clear cell
+                cell.innerHTML = '';
+                cell.classList.remove('can-place', 'winning');
+                
+                // Add rings
+                if (cellData.rings && cellData.rings.length > 0) {
+                    cellData.rings.forEach((ring, ringIndex) => {
+                        const ringEl = document.createElement('div');
+                        ringEl.className = `ring ${ring.size.toLowerCase()} ${ring.color}`;
+                        if (ring.isNew) {
+                            ringEl.classList.add('newly-placed');
+                            setTimeout(() => {
+                                ringEl.classList.remove('newly-placed');
+                                ring.isNew = false;
+                            }, 600);
+                        }
+                        cell.appendChild(ringEl);
+                    });
+                }
+                
+                // Highlight possible moves
+                if (selectedRingSize && gameState.status === 'PLAYING') {
+                    if (canPlaceRing(row, col, selectedRingSize)) {
+                        cell.classList.add('can-place');
+                    }
+                }
+                
+                // Highlight winning line
+                if (gameState.winningLine) {
+                    const posStr = `${row},${col}`;
+                    if (gameState.winningLine.includes(posStr)) {
+                        cell.classList.add('winning');
+                    }
+                }
+            });
+        }
+
+        function updateMoveHistory() {
+            const historyEl = document.getElementById('moveHistory');
+            historyEl.innerHTML = '';
+            
+            moveHistory.slice(-5).reverse().forEach((move, index) => {
+                const moveDiv = document.createElement('div');
+                moveDiv.className = 'move-item';
+                moveDiv.innerHTML = `
+                    <span style="color: ${COLORS[move.color]}">${move.player}</span>: 
+                    ${move.size} → (${move.row + 1},${move.col + 1})
+                `;
+                historyEl.appendChild(moveDiv);
+            });
+        }
+
+        function startTurnTimer() {
+            const timerEl = document.getElementById('turnTimer');
+            
+            const updateTimer = () => {
+                if (gameState.status !== 'PLAYING') {
+                    timerEl.textContent = '';
+                    return;
+                }
+                
+                const elapsed = Math.floor((Date.now() - turnStartTime) / 1000);
+                timerEl.textContent = `Turn time: ${elapsed}s`;
+                
+                if (elapsed < 60) {
+                    setTimeout(updateTimer, 1000);
+                }
+            };
+            
+            updateTimer();
+        }
+
+        function selectRingSize(size) {
+            if (gameState.status !== 'PLAYING') return;
+            
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            if (currentPlayer.rings[size] === 0) return;
+            
+            selectedRingSize = selectedRingSize === size ? null : size;
+            updateDisplay();
+            
+            if (selectedRingSize) {
+                playSound('select');
+            }
+        }
+
+        function canPlaceRing(row, col, size) {
+            const cellData = gameState.board[row][col];
+            if (!cellData.rings || cellData.rings.length === 0) return true;
+            
+            return !cellData.rings.some(ring => ring.size === size);
+        }
+
+        function makeMove(row, col) {
+            if (!selectedRingSize || gameState.status !== 'PLAYING') return;
+            
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            
+            if (!canPlaceRing(row, col, selectedRingSize)) {
+                alert('Cannot place ring there! A ring of this size already exists in this position.');
+                return;
+            }
+
+            // Make the move
+            const ring = {
+                size: selectedRingSize,
+                color: currentPlayer.color,
+                isNew: true
+            };
+            
+            gameState.board[row][col].rings.push(ring);
+            currentPlayer.rings[selectedRingSize]--;
+            
+            // Add to move history
+            moveHistory.push({
+                player: currentPlayer.name,
+                color: currentPlayer.color,
+                size: selectedRingSize,
+                row: row,
+                col: col
+            });
+            
+            selectedRingSize = null;
+            playSound('move');
+            
+            // Check for win
+            const winResult = checkWin();
+            if (winResult) {
+                gameState.status = 'FINISHED';
+                gameState.winner = currentPlayer.color;
+                gameState.winningLine = winResult.line;
+                playSound('win');
+            } else if (isGameDraw()) {
+                gameState.status = 'FINISHED';
+                gameState.winner = null;
+            } else {
+                // Switch turns
+                gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+                turnStartTime = Date.now();
+            }
+            
+            updateDisplay();
+            
+            if (gameState.status === 'PLAYING') {
+                startTurnTimer();
+            }
+        }
+
+        function checkWin() {
+            const board = gameState.board;
+            
+            // Helper function to get ring at position by size
+            function getRingBySize(row, col, size) {
+                const cell = board[row][col];
+                return cell.rings.find(ring => ring.size === size);
+            }
+            
+            // Helper function to get all rings at position
+            function getAllRings(row, col) {
+                return board[row][col].rings;
+            }
+            
+            // Check lines (rows, columns, diagonals)
+            const lines = [
+                // Rows
+                [[0,0], [0,1], [0,2]],
+                [[1,0], [1,1], [1,2]],
+                [[2,0], [2,1], [2,2]],
+                // Columns
+                [[0,0], [1,0], [2,0]],
+                [[0,1], [1,1], [2,1]],
+                [[0,2], [1,2], [2,2]],
+                // Diagonals
+                [[0,0], [1,1], [2,2]],
+                [[0,2], [1,1], [2,0]]
+            ];
+            
+            for (const line of lines) {
+                // Check same size wins
+                for (const size of ['SMALL', 'MEDIUM', 'LARGE']) {
+                    const rings = line.map(([r, c]) => getRingBySize(r, c, size)).filter(r => r);
+                    if (rings.length === 3 && rings.every(ring => ring.color === rings[0].color)) {
+                        return { type: 'same-size', line: line.map(([r, c]) => `${r},${c}`) };
+                    }
+                }
+                
+                // Check size progression wins
+                const positions = line.map(([r, c]) => getAllRings(r, c));
+                if (positions.every(p => p.length > 0)) {
+                    // Check small->medium->large progression
+                    const smallRing = getRingBySize(line[0][0], line[0][1], 'SMALL');
+                    const mediumRing = getRingBySize(line[1][0], line[1][1], 'MEDIUM');
+                    const largeRing = getRingBySize(line[2][0], line[2][1], 'LARGE');
+                    
+                    if (smallRing && mediumRing && largeRing && 
+                        smallRing.color === mediumRing.color && 
+                        mediumRing.color === largeRing.color) {
+                        return { type: 'progression', line: line.map(([r, c]) => `${r},${c}`) };
+                    }
+                    
+                    // Check large->medium->small progression
+                    const largeRing2 = getRingBySize(line[0][0], line[0][1], 'LARGE');
+                    const mediumRing2 = getRingBySize(line[1][0], line[1][1], 'MEDIUM');
+                    const smallRing2 = getRingBySize(line[2][0], line[2][1], 'SMALL');
+                    
+                    if (largeRing2 && mediumRing2 && smallRing2 && 
+                        largeRing2.color === mediumRing2.color && 
+                        mediumRing2.color === smallRing2.color) {
+                        return { type: 'progression', line: line.map(([r, c]) => `${r},${c}`) };
+                    }
+                }
+            }
+            
+            // Check concentric wins (all 3 sizes in same cell)
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const rings = getAllRings(row, col);
+                    if (rings.length === 3) {
+                        const sizes = rings.map(r => r.size).sort();
+                        const colors = rings.map(r => r.color);
+                        
+                        if (sizes.join(',') === 'LARGE,MEDIUM,SMALL' && 
+                            colors.every(c => c === colors[0])) {
+                            return { type: 'concentric', line: [`${row},${col}`] };
+                        }
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        function isGameDraw() {
+            // Check if any player has rings left and can make a move
+            for (const player of gameState.players) {
+                for (const size of ['SMALL', 'MEDIUM', 'LARGE']) {
+                    if (player.rings[size] > 0) {
+                        // Check if this ring can be placed anywhere
+                        for (let row = 0; row < 3; row++) {
+                            for (let col = 0; col < 3; col++) {
+                                if (canPlaceRing(row, col, size)) {
+                                    return false; // Game can continue
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true; // No valid moves left
+        }
+
+        function showWinMessage() {
+            const overlay = document.getElementById('overlay');
+            const winMessage = document.getElementById('winMessage');
+            const winText = document.getElementById('winText');
+            
+            let message;
+            if (gameState.winner) {
+                const winner = gameState.players.find(p => p.color === gameState.winner);
+                message = `${winner.name} (${winner.color}) claims victory in this epic battle!`;
+            } else {
+                message = 'The battle ends in an honorable draw!';
+            }
+            
+            winText.textContent = message;
+            
+            overlay.style.display = 'block';
+            winMessage.style.display = 'block';
+            
+            // Create victory particles
+            if (gameState.winner) {
+                createVictoryParticles();
+            }
+        }
+
+        function createVictoryParticles() {
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * window.innerWidth + 'px';
+                    particle.style.top = window.innerHeight + 'px';
+                    particle.style.width = Math.random() * 10 + 5 + 'px';
+                    particle.style.height = particle.style.width;
+                    
+                    const winnerColor = COLORS[gameState.winner];
+                    particle.style.backgroundColor = winnerColor;
+                    particle.style.animation = 'particle-float 3s ease-out forwards';
+                    
+                    document.body.appendChild(particle);
+                    
+                    setTimeout(() => particle.remove(), 3000);
+                }, i * 100);
+            }
+        }
+
+        function newGame() {
+            gameState = {
+                gameId: 'demo-game',
+                status: 'WAITING',
+                currentPlayerIndex: 0,
+                players: [],
+                board: Array(3).fill().map(() => Array(3).fill().map(() => ({rings: []}))),
+                winner: null,
+                winningLine: null
+            };
+            
+            selectedRingSize = null;
+            moveHistory = [];
+            turnStartTime = Date.now();
+            
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('winMessage').style.display = 'none';
+            document.getElementById('gameSetup').style.display = 'block';
+            document.getElementById('gameArea').style.display = 'none';
+            
+            document.getElementById('player1Name').value = '';
+            document.getElementById('player2Name').value = '';
+        }
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Ring Wars Enhanced - Ready for battle!');
+            
+            // Add some initial sparkle effects
+            setTimeout(() => {
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        const particle = document.createElement('div');
+                        particle.className = 'particle';
+                        particle.style.left = Math.random() * window.innerWidth + 'px';
+                        particle.style.top = Math.random() * window.innerHeight + 'px';
+                        particle.style.width = '3px';
+                        particle.style.height = '3px';
+                        particle.style.backgroundColor = '#ffffff';
+                        document.body.appendChild(particle);
+                        
+                        setTimeout(() => particle.remove(), 2000);
+                    }, i * 200);
+                }
+            }, 1000);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (gameState.status === 'PLAYING') {
+                switch(e.key) {
+                    case '1':
+                        selectRingSize('SMALL');
+                        break;
+                    case '2':
+                        selectRingSize('MEDIUM');
+                        break;
+                    case '3':
+                        selectRingSize('LARGE');
+                        break;
+                    case 'Escape':
+                        selectedRingSize = null;
+                        updateDisplay();
+                        break;
+                }
+            }
+            
+            if (e.key === 'n' || e.key === 'N') {
+                newGame();
+            }
+        });
+    </script>
+</body>
+</html>
