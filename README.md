@@ -59,7 +59,8 @@ ring-wars/
 │                       │   └── Ring.java
 │                       └── service/
 │                           └── GameService.java
-├── enhanced_ring_wars.html
+├── ui
+│   └── enhanced_ring_wars.html
 ├── pom.xml
 └── README.md
 ```
